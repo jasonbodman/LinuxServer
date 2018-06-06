@@ -93,7 +93,7 @@ grader ALL=(ALL:ALL) ALL
 
 ### Create ssh login key pair for grader
 
-- On the locak machine and in a separate terminal window, not the one connected to SSH, generate the new SSH key pair using ```ssh-keygen```. 
+- On the local machine and in a separate terminal window, not the one connected to SSH, generate the new SSH key pair using ```ssh-keygen```. 
 - The prompt will ask for the location of where the new keypair should be saved and the name you'd like to give the pair (at the end of the location string). It is best to save the keypair directly to the local ``` /.ssh/``` folder for the user.
   - I used ```/Users/Jason/.ssh/GraderKey```.
 - The system will also prompt for a password to secure the SSH key.
@@ -101,4 +101,7 @@ grader ALL=(ALL:ALL) ALL
   - Anyone logging into my instance using my Grader account, will need to enter the password while trying to ssh into the instance.
 - Switch to the grader account using ```sudo su grader```. 
 - As the user "grader", create .ssh directory using ```mkdir .ssh```.
-- Create a new file to store the key using ```vim .ssh/authorized_keys```
+- Create a new file to store the key using ```nano .ssh/authorized_keys```
+- On the local machine, open and copy (select all and copy) the contents of the public key using ```cat ~/.ssh/GraderKey.pub```.
+  - *Update the name of the key to match the name of the SSH Key pair that was declared above*
+- Using the grader account that is logged into the terminal, open the ```authorized_keys``` file using ```nano authorized_keys```
