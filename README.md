@@ -4,11 +4,11 @@ This project was completed as a part of Udacity's Full Stack Web Developer Nanod
 
 ### Server details
 
-**IP Address**: 18.218.113.251
+- **IP Address**: 18.218.113.251
 
-**Accessible Port**: 2200
+- **Accessible Port**: 2200
 
-**Application URL**: http://ec2-18-218-113-251.us-east-2.compute.amazonaws.com/
+- **Application URL**: http://ec2-18-218-113-251.us-east-2.compute.amazonaws.com/
 
 ### Important Reviewer Information
 
@@ -40,3 +40,53 @@ The reviewer can login to the instance via the grader account using ```ssh grade
 - From the terminal, change read/write settings for the file using ```chmod 600 ~/.ssh/LightsailKey.pem```.
 - Now you can connect ot the instance from your local machine using ```ssh ubuntu@18.218.113.251 -i ~/.ssh/LightsailKey.pem```.
   - *If you are following this documentation as a guide, you'll want to replace the IP address above with the IP address of your own instance.*
+
+### Securing the server
+### Update and upgrade all packages
+
+```
+sudo apt-get update       // This checks all installed packages and notes which can be updated.
+sudo apt-get upgrade      // This uses information above to upgrade all available packages.
+```
+
+### Change SSH port from 22 to 2200
+- Edit ```sshd_config``` file using ```sudo nano /etc/ssh/sshd_config```.
+- Change the port number on *line 5* from **22** to **2200**.
+- Save and exit. (Using nano, this is accomplished using ctrl+x and following the prompts to save.)
+- Restart ssh service using ```sudo service ssh restart```.
+
+### Update Amazon Lightsail Firewall Configuration
+- From the Lightsail dashboard, select your instance by clicking on the name of the instance. 
+- Click on the ```Networking``` tab from the instance's dashboard. 
+- Under the Firewall section click  ```Add another```. 
+- For the options, choose ```Custom``` as the application, ```TCP``` as the protocol and set the range to ```2200```. 
+
+### Configure the UFW (Uncomplicated Firewall)
+- First, ensure that the UFW is inactive using ```sudo ufw status```. 
+  - It should return  ```ufw inactive``` if it is in fact inactive. 
+- Set the appropriate ports for this project using the following commands: 
+```
+sudo ufw default deny incoming      // Deny all incoming by default
+sudo ufw default allow outgoing     // Allow all outgoing by default
+sudo ufw allow 2200/tcp             // Allow SSH on port 2200
+sudo ufw allow 80/tcp               // Allow HTTP on port 80
+sudo ufw allow 123/udp              // Allow NTP on port 123
+```
+
+- To turn on the firewall using ```sudo ufw enable```. 
+
+## Create new user - Grader
+### Create a new user named grader
+```
+sudo adduser grader
+```
+
+For this project, I set the user's password to ```password``` and the Full Name to ```Udacity Grader```. I left all other fields blank. 
+
+### Give new user sudo permission
+- Open the ssh-config file using ```sudo visudo```. 
+- The following line must be inserted below the line defining ```root``` to give the grader user permission to use sudo: 
+```
+grader ALL=(ALL:ALL) ALL
+```
+- Save anx exit the file using ctrl + x. 
