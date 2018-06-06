@@ -90,3 +90,15 @@ For this project, I set the user's password to ```password``` and the Full Name 
 grader ALL=(ALL:ALL) ALL
 ```
 - Save anx exit the file using ctrl + x. 
+
+### Create ssh login key pair for grader
+
+- On the locak machine and in a separate terminal window, not the one connected to SSH, generate the new SSH key pair using ```ssh-keygen```. 
+- The prompt will ask for the location of where the new keypair should be saved and the name you'd like to give the pair (at the end of the location string). It is best to save the keypair directly to the local ``` /.ssh/``` folder for the user.
+  - I used ```/Users/Jason/.ssh/GraderKey```.
+- The system will also prompt for a password to secure the SSH key.
+  - I used ```password``` for the SSH key pair.
+  - Anyone logging into my instance using my Grader account, will need to enter the password while trying to ssh into the instance.
+- Switch to the grader account using ```sudo su grader```. 
+- As the user "grader", create .ssh directory using ```mkdir .ssh```.
+- Create a new file to store the key using ```vim .ssh/authorized_keys```
