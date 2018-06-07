@@ -75,6 +75,11 @@ sudo ufw allow 123/udp              // Allow NTP on port 123
 
 - To turn on the firewall using ```sudo ufw enable```. 
 
+### Change the timezone to UTC
+- Run ```sudo dpkg-reconfigure tzdata```.
+- Select ```None of the above.```
+- Then select ```UTC``` and it will automatically be updated.
+
 ## Create new user - Grader
 ### Create a new user named grader
 ```
@@ -103,5 +108,61 @@ grader ALL=(ALL:ALL) ALL
 - As the user "grader", create .ssh directory using ```mkdir .ssh```.
 - Create a new file to store the key using ```nano .ssh/authorized_keys```
 - On the local machine, open and copy (select all and copy) the contents of the public key using ```cat ~/.ssh/GraderKey.pub```.
-  - *Update the name of the key to match the name of the SSH Key pair that was declared above*
-- Using the grader account that is logged into the terminal, open the ```authorized_keys``` file using ```nano authorized_keys```
+  - *Update the name of the key to match the name of the SSH Key pair that was declared above.*
+- Using the grader account that is logged into the terminal, open the ```authorized_keys``` file using ```nano ~/.ssh/authorized_keys``` and pase the content of GraderKey.pub (copied in the step above). Don't forget to save!
+- Edit the read/write permissions on the account and folder using:
+```
+sudo chmod 700 .ssh
+sudo chmod 644 .ssh/authorized_keys
+```
+- At this point, it is important to restart the ssh service so that changes take place. This can be accomplished using ```sudo service ssh restart```.
+
+### Disable root login
+- ```sudo nano /etc/ssh/sshd_config```.
+- Look for ```PermitRootLogin``` and change the option from ```without-password``` to ```no```.
+- Use ctrl+x to save and exit.
+
+## Setup Server with Apache and PostgreSQL
+### Install and configure Apache to serve a mod_wsgi application
+- Run ```sudo apt-get install apache2```.
+- Install the mod-wsgi using: ```sudo apt-get install libapache2-mod-wsgi```.
+- Start the service using ```sudo service apache2 start```.
+- Check to make sure that everything installed correctly by typing the instance's IP address into your favorite browser. The IP address should return an apache webpage that says "It works!".
+
+### Install PostgreSQL
+- Install postgresql with ```sudo apt-get postgresql postgresql-contrib```.
+- Open the config file using ```sudo nano /etc/postgresql/9.5/main/pg_hba.conf``` to confirm that that the file is setup to only allow connections from the host address 127.0.0.1. The file should look like:
+```
+# Database administrative login by Unix domain socket
+local   all             postgres                                peer
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# "local" is for Unix domain socket connections only
+local   all             all                                     peer
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            md5
+# IPv6 local connections:
+host    all             all             ::1/128                 md5
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+#local   replication     postgres                                peer
+#host    replication     postgres        127.0.0.1/32            md5
+#host    replication     postgres        ::1/128                 md5
+```
+
+- Create a new postegresql user using ```sudo -u postgres createuser -P catalog```.
+- The system will ask for a password. I just used ```password```, as usual.
+- Create a new and empty database using ```sudo -u postgres createdb -O catalog catalog```.
+
+### Install Flask
+- While logged in as the grader user, install pip using ```sudo apt-get install python-pip```.
+- Install the virtual environment using ```sudo apt-get install python-virtualenv```.
+- Move to the application's directory using ```cd /var/www/catalog```.
+- Create the virtual environment by running ```sudo virtualenv env```.
+- Activate the virtual environment using ```source env/bin/activate```.
+- Adjust the read/write permissions using ```sudo chmod -R 777 venv```.
+- Install Flask by running ```pip install Flask```.
+- Install any other required dependencies (depends on the project you are running). For my project this included:
+```
+sudo apt-get install python-psycopg2 python-flast
