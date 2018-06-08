@@ -31,6 +31,8 @@ The reviewer can login to the instance via the grader account using ```ssh grade
 - Click the orange ```Create``` button and wait for the instance to start up. 
 - Once ready, the instance will be lit up when logged into the main page of the Lightsail dashboard.
 
+*Source: [Udacity: Get Started on Lightsail](https://classroom.udacity.com/nanodegrees/nd004/parts/ab002e9a-b26c-43a4-8460-dc4c4b11c379/modules/357367901175462/lessons/3573679011239847/concepts/c4cbd3f2-9adb-45d4-8eaf-b5fc89cc606e)
+
 ### Logging into server via SSH
 - While logged into the Lightsail platform, select ```Account > Account``` from the navbar to open Account Settings.
 - Select the SSH tab and download the default key. 
@@ -41,7 +43,7 @@ The reviewer can login to the instance via the grader account using ```ssh grade
 - Now you can connect ot the instance from your local machine using ```ssh ubuntu@18.218.113.251 -i ~/.ssh/LightsailKey.pem```.
   - *If you are following this documentation as a guide, you'll want to replace the IP address above with the IP address of your own instance.*
 
-### Securing the server
+## Securing the server
 ### Update and upgrade all packages
 
 ```
@@ -79,6 +81,8 @@ sudo ufw allow 123/udp              // Allow NTP on port 123
 - Run ```sudo dpkg-reconfigure tzdata```.
 - Select ```None of the above.```
 - Then select ```UTC``` and it will automatically be updated.
+
+*Source: [UbuntuTime](https://help.ubuntu.com/community/UbuntuTime)
 
 ## Create new user - Grader
 ### Create a new user named grader
@@ -212,6 +216,21 @@ as authorized redirect URI.
 - Using ```sudo nano /var/www/catalog/catalog/client_secret.json``` and paste the previous contents into the this file.
 - Replace the client ID to line 25 of the `templates/login.html` file in the project directory.
 
+### Update catalog.wsgi file
+- This file shows the system the location of the different catalog app files. 
+- To edit the file, run ```sudo nano /var/www/catalog/catalog.wsgi```.
+- For this application, I added the following to this file before saving:
+```
+#!/usr/bin/python
+import sys
+import logging
+logging.basicConfig(stream=sys.stderr)
+sys.path.insert(0, "/var/www/catalog/")
+
+from __init__ import app as application
+application.secret_key = 'super_secret_key'
+```
+
 ### Create the virtual host configuration file
 - Create and edit the virtual host configuration file by running ```sudo nano /etc/apache2/sites-available/catalog.conf```.
 - Add the following contents before saving and exiting:
@@ -238,3 +257,14 @@ as authorized redirect URI.
 ```
 - Disable the default virtual host by running ```sudo a2dissite 000-default.conf```.
 - Enable the catalog app virtual host using ```sudo a2ensite catalog.conf```.
+
+*Source: [Digital Ocean](https://www.digitalocean.com/community/tutorials/how-to-run-django-with-mod_wsgi-and-apache-with-a-virtualenv-python-environment-on-a-debian-vps)
+
+### Restart Apache to launch the app
+```
+sudo service apache2 restart
+```
+- To view the application, visit the IP address or Alias address. In this case it is:
+```
+http://ec2-18-218-113-251.us-east-2.compute.amazonaws.com/
+```
