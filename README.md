@@ -163,6 +163,78 @@ host    all             all             ::1/128                 md5
 - Activate the virtual environment using ```source env/bin/activate```.
 - Adjust the read/write permissions using ```sudo chmod -R 777 venv```.
 - Install Flask by running ```pip install Flask```.
-- Install any other required dependencies (depends on the project you are running). For my project this included:
+- While still in the ```/var/www/catalog``` application folder, install any other required dependencies (depends on the project you are running). For my project this included:
 ```
-sudo apt-get install python-psycopg2 python-flast
+sudo apt-get install python-psycopg2 python-flask
+sudo apt-get install python-sqalchemy python-pip
+sudo pip install oauth2client
+sudo pip install requests
+sudo pip install httplib2
+sudo pip install flask_httpauth
+sudo pip install bleach
+```
+
+## Deploy and update the application
+### Install Git and clone catalog app repository
+- Install Git and clone the catalog app using:
+```
+sudo apt-get install git
+cd var/www/catalog                    // If not already within the application folder
+sudo chown grader:grader catalog/     // Change the ownershp of the catalog directory to grader user  
+sudo -u www-data git clone https://github.com/jasonbodman/petstore.git catalog
+```
+
+### Update catalog app files for web deployment:
+- Rename the ```application.py``` file to ```__init__.py``` using ```mv application.py __init__.py```.
+- In ```__init__.py``` file, update the app.run line (at the end of the file):
+```
+#app.run(host="0.0.0.0", port=8000, debut=True)   // Comment out old line
+app.run()                                         // Add new line
+```
+
+- In ```database.py```, ```application.py```, and ```database_setup.py``` files, replace the line directing the engine:
+```
+# engine = create_engine("sqlite:///catalog.db")                    
+engine = create_engine('postgresql://catalog:PASSWORD@localhost/catalog')
+```
+
+### Authenticate Google Login
+
+- Go to [Google Cloud Plateform](https://console.developer.google.com/).
+- Click `APIs & services` on left menu.
+- Click `Credentials`, which is also represented by the key icon on the left navigation.
+- Create an OAuth Client ID (under the Credentials tab), and add http://18.218.113.251 and 
+http://ec18.218.113.251.us-east-2.compute.amazonaws.com as authorized JavaScript 
+origins.
+- Add http://ec18.218.113.251.us-east-2.compute.amazonaws.com/oauth2callback 
+as authorized redirect URI.
+- Download the corresponding JSON file, open it to copy the contents.
+- Using ```sudo nano /var/www/catalog/catalog/client_secret.json``` and paste the previous contents into the this file.
+- Replace the client ID to line 25 of the `templates/login.html` file in the project directory.
+
+### Create the virtual host configuration file
+- Create and edit the virtual host configuration file by running ```sudo nano /etc/apache2/sites-available/catalog.conf```.
+- Add the following contents before saving and exiting:
+```
+<VirtualHost *:80>
+    ServerName 18.218.113.251
+    ServerAlias ec2-18-218-113-251.us-east-2.compute.amazonaws.com
+    ServerAdmin admin@18.218.113.251
+
+    WSGIDaemonProcess catalog python-path=/var/www/catalog:/var/www/catalog/ven$
+    WSGIProcessGroup catalog
+    WSGIScriptAlias / /var/www/catalog/catalog.wsgi
+    <Directory /var/www/catalog/catalog/>
+        Require all granted
+    </Directory>
+    Alias /static /var/www/catalog/catalog/static
+    <Directory /var/www/catalog/catalog/static/>
+        Require all granted
+    </Directory>
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    LogLevel warn
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+```
+- Disable the default virtual host by running ```sudo a2dissite 000-default.conf```.
+- Enable the catalog app virtual host using ```sudo a2ensite catalog.conf```.
